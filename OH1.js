@@ -1,10 +1,12 @@
-var mongoose = require('mongoose');
-var csv = require("fast-csv");
-var fs = require("fs");
-var mongodb = require('mongodb');
-var uniqueValidator = require('mongoose-unique-validator');
-var validate = require('mongoose-validator');
-var phnoValidator = [
+var cron = require('cron');
+var cronJob = cron.job("0 */2 * * * *", function(){
+ var mongoose = require('mongoose');
+ var csv = require("fast-csv");
+ var fs = require("fs");
+ var mongodb = require('mongodb');
+ var uniqueValidator = require('mongoose-unique-validator');
+ var validate = require('mongoose-validator');
+ var phnoValidator = [
                       validate({
                        validator: 'isLength', //For ph_no validation (ph number must be 10 digits)
                        arguments: [10, 10],
@@ -22,7 +24,7 @@ var phnoValidator = [
                                                      "IAP Number":{ type : String,required: true,index: {unique: true}},
                                                      "Education":{type : String,required: true},
                                                      "Degree(s) Obtained":{type :String,required: true},
-                                                     "Specialisation ":{type : String,required: false},
+                                                     "Specialisation":{type : String,required: false},
                                                      "Consulting Location 1":{type : String,required: true},
                                                      "Consulting Location 2 (If applicable)":{type : String,required: false},
                                                      "Consulting Location 3 (If applicable)":{type : String,required: false},
@@ -118,3 +120,6 @@ process.on('SIGINT', function() {
                                 });
  
  });
+ console.info('cron job completed');
+}); 
+cronJob.start();
