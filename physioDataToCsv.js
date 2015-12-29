@@ -1,7 +1,21 @@
+// npm install corn
+//npm install jsn2csv
+//npm install nodemailer
+//npm install fs
+//npm install mongodb
 var cron = require('cron');
 var cronJob = cron.job("0 */1 * * * *", function(){
  var json2csv = require('json2csv');
  var fs = require('fs');
+ var fs = require("fs");
+var nodemailer = require('nodemailer');
+var transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: 'onehealthsln@gmail.com',
+        pass: '1healthsln'
+    }
+  });
  var mongodb = require('mongodb'),
      ObjectId = require('mongodb').ObjectId;
  var MongoClient = mongodb.MongoClient;
@@ -42,5 +56,27 @@ var cronJob = cron.job("0 */1 * * * *", function(){
   }
 });
 console.info('cron job completed');
+fs.readFile('C:\\csvfile\\myphysioData.csv', function (err, data) {
+    if(err)
+      console.log(err);
+    else
+    {
+
+    transporter.sendMail({       
+        sender: 'onehealthsln@gmail.com',
+        to:    'self.anjan@gmail.com',
+        subject: 'Attachment!',
+        body: 'mail content...',
+        attachments: [{'filename': 'myphysioData.csv', 'content': data}]
+
+    }), function(err, success) {
+        if (err) {
+            // Handle error
+        } 
+
+    }
+}
+});
+
 }); 
 cronJob.start();
