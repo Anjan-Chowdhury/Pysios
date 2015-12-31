@@ -6,7 +6,6 @@
 var cron = require('cron');
 var cronJob = cron.job("0 */1 * * * *", function(){
  var json2csv = require('json2csv');
- var fs = require('fs');
  var fs = require("fs");
 var nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport({
@@ -25,20 +24,19 @@ var transporter = nodemailer.createTransport({
      console.log('Unable to connect to the mongoDB server. Error:', err);
   } 
   else {
-    //HURRAY!! We are connected. :)
+    //We are connected. 
     console.log('Connection established to', url);
 
     // Get the documents collection
     var collection = db.collection('physiocollections');
      
-     
-      collection.find().toArray(function(err, result) {
+      collection.find({ "Status": "unchecked" }).toArray(function(err, result) {
         if(err) {
           console.log("data is not fatched from Db")
         }
       
         //console.log(result);
-        var fields = ['Timestamp','First Name','Last Name','Date of Birth','Gender','Email Address','Contact Number','Years of Experience','IAP Number','Education','Degree(s) Obtained','Specialisation','Consulting Location 1','Consulting Location 2 (If applicable)','Consulting Location 3 (If applicable)','Awards'];
+        var fields = ['Timestamp','First Name','Last Name','Date of Birth','Gender','Email Address','Contact Number','Years of Experience','IAP Number','Education','Degree(s) Obtained','Specialisation','Consulting Location 1','Consulting Location 2 (If applicable)','Consulting Location 3 (If applicable)','Awards','Status'];
         var mydata = result;
         //console.log(mydata);
         json2csv({ data: mydata, fields: fields }, function(err, csv) {
@@ -49,6 +47,7 @@ var transporter = nodemailer.createTransport({
         //console.log(mydata);
         //console.log(csv);
        console.log('file saved');
+
        });
      });
 
@@ -56,26 +55,38 @@ var transporter = nodemailer.createTransport({
   }
 });
 console.info('cron job completed');
-fs.readFile('C:\\csvfile\\myphysioData.csv', function (err, data) {
-    if(err)
-      console.log(err);
-    else
-    {
-
-    transporter.sendMail({       
+fs.readFile("C:\\csvfile\\myphysioData.csv", 'utf8', function (err, data) {
+  if(err){console.log(err)}
+    else{
+        //console.log(data);
+      transporter.sendMail({       
         sender: 'onehealthsln@gmail.com',
-        to:    'self.anjan@gmail.com',
+        to: 'self.anjan@gmail.com',
         subject: 'Attachment!',
         body: 'mail content...',
-        attachments: [{'filename': 'myphysioData.csv', 'content': data}]
-
-    }), function(err, success) {
+        attachments: [{filename: "myphysioData.csv",filePath: "C:\\csvfile\\myphysioData.csv",ContentDisposition: "attachment",ContentType: "text/csv",ContentEncoding: "base64",content: data}]}, function(err, success) {
         if (err) {
-            // Handle error
-        } 
-
-    }
-}
+            console.log(err);
+        }
+      else{
+            
+            MongoClient.connect(url, function (err, db) {
+            if (err) {
+                      console.log('Unable to connect to the mongoDB server. Error:', err);
+                     } 
+            else {
+                   // We are connected. 
+                   console.log('Connection established to', url);
+                   var collection = db.collection('physiocollections');
+                   collection.update({"Status":"unchecked"},{$set:{"Status":"checked"}},{multi:true},function(err, updated) {
+                     if( err || !updated ) console.log("physiocollections not updated");
+                     else console.log("physicollections updated");});
+                   console.log(data);
+                }
+            })
+          }
+    });
+ }
 });
 
 }); 
